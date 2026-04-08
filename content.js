@@ -92,6 +92,8 @@ let rightHandBone = null;
 let leftFootBone = null;
 let rightFootBone = null;
 let baseHeadY = null;
+let baseHeadRotationX = null;
+let baseNeckRotationX = null;
 let baseModelScale = null;
 let baseModelX = null;
 let baseLeftArmScale = null;
@@ -192,10 +194,14 @@ loader.load(chrome.runtime.getURL('assets/hamster.glb'), (gltf) => {
 
     model.traverse((obj) => {
         if (obj.isBone) console.log('bone:', obj.name);
-        if (obj.isBone && obj.name === 'Neck') neckBone = obj;
+        if (obj.isBone && obj.name === 'Neck') {
+            neckBone = obj;
+            baseNeckRotationX = obj.rotation.x;
+        }
         if (obj.isBone && obj.name === 'Head') {
             headBone = obj;
             baseHeadY = obj.position.y;
+            baseHeadRotationX = obj.rotation.x;
         }
         if (obj.isBone && obj.name === 'LeftUpLeg') leftUpLegBone = obj;
         if (obj.isBone && obj.name === 'RightUpLeg') rightUpLegBone = obj;
@@ -227,11 +233,21 @@ function animate() {
     elapsedSeconds += (now - lastTime) / 1;
     lastTime = now;
 
-    // 목 늘이기 (30s마다 0.1씩 늘어남, 화면 높이 80% 제한)
-    if (headBone && baseHeadY !== null) {
-        const maxStretch = window.innerHeight * 0.8 / 100; // 화면 높이의 80% 기준
+    // 목 늘이기 (30s마다 0.1씩 늘어남, 캔버스 높이 80% 제한)
+    if (headBone && baseHeadY !== null && baseHeadRotationX !== null) {
+        const maxStretch = window.innerHeight * 0.8 / 100; // 캔버스의 80% 기준
         const stretch = Math.min((elapsedSeconds / 30) * 0.1, maxStretch);
-        headBone.position.y = baseHeadY + stretch;
+        const stretchRatio = stretch / maxStretch; // 0 ~ 1
+
+        // 목과 머리 회전 (거북목처럼 앞으로 휨)
+        const rotationAmount = stretchRatio * 0.3; // 최대 0.3 라디안
+        if (headBone) headBone.rotation.x = baseHeadRotationX + rotationAmount;
+
+        // Neck만 길이 늘어남 (scale.y로 길어지게)
+        if (neckBone && baseNeckRotationX !== null) {
+            neckBone.rotation.x = baseNeckRotationX + rotationAmount;
+            neckBone.scale.y = 1 + stretchRatio * 3; // 최대 3배까지 늘어남
+        }
     }
 
     // 호흡 애니메이션 (모델이 살아있는 것처럼)
