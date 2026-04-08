@@ -105,19 +105,40 @@ let walkSpeed = 0.02; // 이동 속도
 let lastWalkTime = 0;
 const loader = new THREE.GLTFLoader();
 
+// 3D 월드 좌표를 2D 스크린 좌표로 변환
+function getScreenPosition(worldPos) {
+    const widthHalf = renderer.domElement.clientWidth / 2;
+    const heightHalf = renderer.domElement.clientHeight / 2;
+
+    const vector = worldPos.clone();
+    vector.project(camera);
+
+    vector.x = (vector.x * widthHalf) + widthHalf;
+    vector.y = -(vector.y * heightHalf) + heightHalf;
+
+    return vector;
+}
+
 // 하트 이모지 생성 함수
 function createHearts() {
     const heartCount = 1; // 3~5개
-    const canvasRect = canvas.getBoundingClientRect();
+
+    if (!model) return;
+
+    // 햄스터의 3D 위치를 2D 스크린 좌표로 변환
+    const modelWorldPos = new THREE.Vector3();
+    model.getWorldPosition(modelWorldPos);
+
+    const screenPos = getScreenPosition(modelWorldPos);
 
     for (let i = 0; i < heartCount; i++) {
         const heart = document.createElement('div');
         heart.className = 'neckster-heart';
         heart.textContent = '❤️';
 
-        // 캔버스 범위 내에서 랜덤 위치에 생성
-        const startX = canvasRect.right - Math.random() * 50;
-        const startY = canvasRect.bottom - Math.random() * 50;
+        // 햄스터 위치 기준으로 생성 (약간의 랜덤 오프셋)
+        const startX = screenPos.x + (Math.random() - 0.5) * 50;
+        const startY = screenPos.y + (Math.random() - 0.5) * 50;
 
         heart.style.left = startX + 'px';
         heart.style.top = startY + 'px';
