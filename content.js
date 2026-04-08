@@ -33,7 +33,7 @@ canvas.style.cssText = `
   width: ${canvasWidth}px;
   height: ${canvasHeight}px;
   z-index: 999999;
-  pointer-events: auto;
+  pointer-events: none;
   cursor: pointer;
 `;
 
@@ -152,9 +152,27 @@ function createHearts() {
     }
 }
 
+// Raycaster 설정 (햄스터 클릭 감지용)
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
 // 클릭 시 애니메이션 처리
-function handleCanvasClick() {
-    if (isAnimating || !model || !headBone || baseHeadY === null || baseModelScale === null) return;
+function handleCanvasClick(event) {
+    // 마우스 좌표를 정규화된 좌표로 변환 (-1 ~ 1)
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    // 광선 생성
+    raycaster.setFromCamera(mouse, camera);
+
+    // 모델과의 충돌 검사
+    if (!model) return;
+    const intersects = raycaster.intersectObject(model, true);
+
+    // 햄스터를 클릭했을 때만 애니메이션 실행
+    if (intersects.length === 0) return;
+    if (isAnimating || !headBone || baseHeadY === null || baseModelScale === null) return;
 
     isAnimating = true;
 
@@ -203,7 +221,7 @@ function handleCanvasClick() {
     requestAnimationFrame(animateSquash);
 }
 
-canvas.addEventListener('click', handleCanvasClick);
+document.addEventListener('click', handleCanvasClick);
 
 loader.load(chrome.runtime.getURL('assets/hamster.glb'), (gltf) => {
     model = gltf.scene;
