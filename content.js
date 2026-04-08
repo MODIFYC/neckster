@@ -49,6 +49,29 @@ const camera = new THREE.PerspectiveCamera(45, canvasWidth / canvasHeight, 0.1, 
 camera.position.set(0, 3, 15);
 camera.lookAt(0, 1, 0);
 
+// 화면 크기 기반 경계 계산
+let walkBounds = { min: -window.innerWidth / 30, max: window.innerWidth / 30 };
+
+// 캔버스 리사이징 함수
+function resizeCanvas() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+
+    // 걷기 범위도 동적으로 업데이트
+    walkBounds = { min: -w / 30, max: w / 30 };
+}
+
+// 처음 실행
+resizeCanvas();
+
+// 창 크기 바뀔 때마다 자동 업데이트
+window.addEventListener('resize', resizeCanvas);
+
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(1, 2, 3);
 scene.add(light);
@@ -77,9 +100,6 @@ let walkDirection = -1; // -1: 왼쪽, 1: 오른쪽
 let walkSpeed = 0.02; // 이동 속도
 let lastWalkTime = 0;
 const loader = new THREE.GLTFLoader();
-
-// 화면 크기 기반 경계 계산
-let walkBounds = { min: -window.innerWidth / 30, max: window.innerWidth / 30 };
 
 // 하트 이모지 생성 함수
 function createHearts() {
