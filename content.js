@@ -52,6 +52,9 @@ camera.lookAt(0, 1, 0);
 // 화면 크기 기반 경계 계산
 let walkBounds = { min: -window.innerWidth / 30, max: window.innerWidth / 30 };
 
+// GLB 로드용 변수 초기화
+let model = null;
+
 // 캔버스 리사이징 함수
 function resizeCanvas() {
     const w = window.innerWidth;
@@ -78,7 +81,6 @@ scene.add(light);
 scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
 // GLB 로드
-let model = null;
 let headBone = null;
 let neckBone = null;
 let leftUpLegBone = null;
@@ -96,7 +98,7 @@ let baseLeftArmScale = null;
 let baseRightArmScale = null;
 let isAnimating = false;
 let isWalking = false;
-let walkDirection = -1; // -1: 왼쪽, 1: 오른쪽
+let walkDirection = 0; // -1: 왼쪽, 0: 정면, 1: 오른쪽
 let walkSpeed = 0.02; // 이동 속도
 let lastWalkTime = 0;
 const loader = new THREE.GLTFLoader();
@@ -184,7 +186,7 @@ loader.load(chrome.runtime.getURL('assets/hamster.glb'), (gltf) => {
     model = gltf.scene;
     model.scale.set(0.6, 0.6, 0.6);
     baseModelScale = 0.6;
-    model.position.set(1, -5, 0);
+    model.position.set(1, -4.8, 0);
     baseModelX = 1;
     scene.add(model);
 
@@ -241,34 +243,53 @@ function animate() {
         );
     }
 
-    // 1초마다 이동 시작 (토글)
+    // 1초마다 방향 랜덤 설정 (0: 정면, -1: 왼쪽, 1: 오른쪽)
     const currentTime = now;
     if (currentTime - lastWalkTime > 1000) {
-        isWalking = !isWalking;
+        walkDirection = Math.floor(Math.random() * 3) - 1; // -1, 0, 1 랜덤
         lastWalkTime = currentTime;
     }
+    isWalking = walkDirection !== 0; // walkDirection이 0이 아니면 움직임
 
     // 이동 및 걷기 애니메이션
     if (model && baseModelX !== null) {
+        // 동적 경계 계산
+        const dynamicBounds = { min: -window.innerWidth / 30, max: window.innerWidth / 30 };
+
         if (isWalking) {
             // 이동 중
             const newX = model.position.x + walkSpeed * walkDirection;
 
             // 경계 체크
-            if (newX <= walkBounds.min) {
-                model.position.x = walkBounds.min;
+            if (newX <= dynamicBounds.min) {
+                model.position.x = dynamicBounds.min;
                 walkDirection = 1; // 오른쪽으로 방향 전환
-            } else if (newX >= walkBounds.max) {
-                model.position.x = walkBounds.max;
+            } else if (newX >= dynamicBounds.max) {
+                model.position.x = dynamicBounds.max;
                 walkDirection = -1; // 왼쪽으로 방향 전환
             } else {
                 model.position.x = newX;
             }
+        } else {
+            // 정지 상태에서도 경계 체크 (창이 줄어들 때)
+            if (model.position.x < dynamicBounds.min) {
+                model.position.x = dynamicBounds.min;
+            } else if (model.position.x > dynamicBounds.max) {
+                model.position.x = dynamicBounds.max;
+            }
+        }
 
-            // 모델 회전 (이동 방향 바라보기, 270도)
-            model.rotation.y = walkDirection > 0 ? 0 : 270;
+        // 모델 회전 (이동 방향 바라보기)
+        if (walkDirection === 1) {
+            model.rotation.y = Math.PI / 4; // 45도 오른쪽
+        } else if (walkDirection === -1) {
+            model.rotation.y = -Math.PI / 4; // -45도 왼쪽
+        } else {
+            model.rotation.y = 0; // 정면
+        }
 
-            // 걸음걸이 애니메이션 (다른 축 사용)
+        // 걸음걸이 애니메이션 (다른 축 사용)
+        if (isWalking) {
             const walkCycle = (now * 0.01) % (Math.PI * 2); // 빠른 걸음
             // z 대신 x축으로 앞뒤 움직임
             if (leftUpLegBone) {
@@ -277,14 +298,18 @@ function animate() {
             if (rightUpLegBone) {
                 rightUpLegBone.rotation.x = Math.sin(walkCycle + Math.PI) * 0.4;
             }
-
         } else {
             // 정지 상태 - 원래대로 복구
             model.rotation.x = 0;
 
-            // 정지 시도 x로
-            if (leftUpLegBone) leftUpLegBone.rotation.x = 0;
-            if (rightUpLegBone) rightUpLegBone.rotation.x = 0;
+            // 정지 상태에서도 미세한 다리 움직임
+            const idleWalkCycle = (now * 0.005) % (Math.PI * 2); // 느린 속도
+            if (leftUpLegBone) {
+                leftUpLegBone.rotation.x = Math.sin(idleWalkCycle) * 0.1; // 작은 움직임
+            }
+            if (rightUpLegBone) {
+                rightUpLegBone.rotation.x = Math.sin(idleWalkCycle + Math.PI) * 0.1;
+            }
         }
     }
 
