@@ -1,0 +1,34 @@
+{
+    "manifest_version": 3,
+    "name": "Neckster",
+    "version": "1.0",
+    "description": "거북목이 될수록 목이 늘어나는 햄스터",
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "libs/three.min.js",
+                "libs/GLTFLoader.js",
+                "content.js"
+            ],
+            "run_at": "document_end"
+        }
+    ],
+    "permissions": [
+        "alarms",
+        "storage"
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "assets/hamster.glb",
+                "libs/*"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}
