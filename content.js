@@ -16,11 +16,11 @@ document.body.appendChild(canvas);
 
 // Three.js 기본 세팅
 const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-renderer.setSize(100, canvasHeight);
+renderer.setSize(150, canvasHeight);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, 150 / canvasHeight, 0.1, 100);
-camera.position.set(0, 2, 15);
+camera.position.set(0, 3, 15);
 camera.lookAt(0, 1, 0);
 
 const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -60,12 +60,12 @@ function animate() {
 
     // 시간 누적
     const now = performance.now();
-    elapsedSeconds += (now - lastTime) / 10;
+    elapsedSeconds += (now - lastTime) / 1000;
     lastTime = now;
 
-    // 목 늘이기 (1분마다 0.1씩 늘어남)
+    // 목 늘이기 (30s마다 0.1씩 늘어남)
     if (headBone && baseHeadY !== null) {
-        const stretch = (elapsedSeconds / 60) * 0.1;
+        const stretch = (elapsedSeconds / 30) * 0.1;
         headBone.position.y = baseHeadY + stretch;
         // // 목이 어느정도 늘어나면 옆모습으로 전환
         // if (stretch > 0.3) {
