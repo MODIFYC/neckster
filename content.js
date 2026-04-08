@@ -232,7 +232,6 @@ loader.load(chrome.runtime.getURL('assets/hamster.glb'), (gltf) => {
     scene.add(model);
 
     model.traverse((obj) => {
-        if (obj.isBone) console.log('bone:', obj.name);
         if (obj.isBone && obj.name === 'Neck') {
             neckBone = obj;
             baseNeckRotationX = obj.rotation.x;
