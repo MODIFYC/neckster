@@ -100,6 +100,12 @@ neckster/
 
 MIT License
 
+## 🎨 크레딧
+
+3D 햄스터 모델: "Hamster" by alis_v_v on Sketchfab
+Licensed under CC BY 4.0
+https://skfb.ly/o6G9P
+
 ## 👨‍💻 기여
 
 버그 리포트와 기능 제안은 언제나 환영합니다!
