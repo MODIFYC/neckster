@@ -224,12 +224,13 @@ function animate() {
 
     // 시간 누적
     const now = performance.now();
-    elapsedSeconds += (now - lastTime) / 1000;
+    elapsedSeconds += (now - lastTime) / 1;
     lastTime = now;
 
-    // 목 늘이기 (30s마다 0.1씩 늘어남)
+    // 목 늘이기 (30s마다 0.1씩 늘어남, 화면 높이 80% 제한)
     if (headBone && baseHeadY !== null) {
-        const stretch = (elapsedSeconds / 30) * 0.1;
+        const maxStretch = window.innerHeight * 0.8 / 100; // 화면 높이의 80% 기준
+        const stretch = Math.min((elapsedSeconds / 30) * 0.1, maxStretch);
         headBone.position.y = baseHeadY + stretch;
     }
 
