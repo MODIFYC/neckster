@@ -251,7 +251,7 @@ function animate() {
 
     // 시간 누적
     const now = performance.now();
-    elapsedSeconds += (now - lastTime) / 1;
+    elapsedSeconds += (now - lastTime) / 1000; // 초 단위로 변환
     lastTime = now;
 
     // 목 늘이기 (30s마다 0.1씩 늘어남, 캔버스 높이 80% 제한)
@@ -273,7 +273,7 @@ function animate() {
 
     // 호흡 애니메이션 (모델이 살아있는 것처럼)
     if (model && baseModelScale !== null) {
-        const breathe = Math.sin(elapsedSeconds * 1.5) * 0.02; // 0.98 ~ 1.02 범위
+        const breathe = Math.sin(elapsedSeconds * 1.5) * 0.03; // 0.98 ~ 1.02 범위
         model.scale.set(
             baseModelScale * (1 + breathe),
             baseModelScale * (1 + breathe),
@@ -281,13 +281,19 @@ function animate() {
         );
     }
 
-    // 1초마다 방향 랜덤 설정 (0: 정면, -1: 왼쪽, 1: 오른쪽)
+    // 방향 랜덤 설정 (0: 정면, -1: 왼쪽, 1: 오른쪽)
     const currentTime = now;
-    if (currentTime - lastWalkTime > 1000) {
+    const timeSinceLastWalk = currentTime - lastWalkTime;
+
+    if (timeSinceLastWalk > Math.random() * 5000 + 5000) { // 5~10초마다 방향 변경
         walkDirection = Math.floor(Math.random() * 3) - 1; // -1, 0, 1 랜덤
         lastWalkTime = currentTime;
+    } else if (timeSinceLastWalk >= 1000 && walkDirection !== 0) {
+        // 1초 이후 정면으로 리셋
+        walkDirection = 0;
     }
-    isWalking = walkDirection !== 0; // walkDirection이 0이 아니면 움직임
+    // 방향 변경 후 1초 동안만 이동
+    isWalking = walkDirection !== 0 && timeSinceLastWalk < Math.random() * 1000 + 1000; // 1~2초 동안 걷기
 
     // 이동 및 걷기 애니메이션
     if (model && baseModelX !== null) {
