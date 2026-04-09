@@ -264,10 +264,13 @@ let elapsedSeconds = 0;
 let lastTime = performance.now();
 let lastStorageSave = 0;
 
-// storage에서 이전 elapsedSeconds 불러오기
-chrome.storage.local.get('necksterElapsed', (data) => {
+// storage에서 이전 상태 불러오기
+chrome.storage.local.get(['necksterElapsed', 'necksterWalkBounds'], (data) => {
     if (data.necksterElapsed) {
         elapsedSeconds = data.necksterElapsed;
+    }
+    if (data.necksterWalkBounds) {
+        walkBounds = data.necksterWalkBounds;
     }
 });
 
@@ -328,29 +331,26 @@ function animate() {
 
     // 이동 및 걷기 애니메이션
     if (model && baseModelX !== null) {
-        // 동적 경계 계산
-        const dynamicBounds = { min: -window.innerWidth / 30, max: window.innerWidth / 30 };
-
         if (isWalking) {
             // 이동 중
             const newX = model.position.x + walkSpeed * walkDirection;
 
             // 경계 체크
-            if (newX <= dynamicBounds.min) {
-                model.position.x = dynamicBounds.min;
+            if (newX <= walkBounds.min) {
+                model.position.x = walkBounds.min;
                 walkDirection = 1; // 오른쪽으로 방향 전환
-            } else if (newX >= dynamicBounds.max) {
-                model.position.x = dynamicBounds.max;
+            } else if (newX >= walkBounds.max) {
+                model.position.x = walkBounds.max;
                 walkDirection = -1; // 왼쪽으로 방향 전환
             } else {
                 model.position.x = newX;
             }
         } else {
-            // 정지 상태에서도 경계 체크 (창이 줄어들 때)
-            if (model.position.x < dynamicBounds.min) {
-                model.position.x = dynamicBounds.min;
-            } else if (model.position.x > dynamicBounds.max) {
-                model.position.x = dynamicBounds.max;
+            // 정지 상태에서도 경계 체크
+            if (model.position.x < walkBounds.min) {
+                model.position.x = walkBounds.min;
+            } else if (model.position.x > walkBounds.max) {
+                model.position.x = walkBounds.max;
             }
         }
 

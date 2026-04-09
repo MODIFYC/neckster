@@ -398,20 +398,27 @@ function updateCageLayout() {
     cageRenderer.setSize(width, height);
 
     // 절반 모드에서 케이지 너비를 줄여서 캔버스에 맞춤
+    const cageScaleX = mode.name === 'full' ? 1 : 0.85;
     if (cageScene.cageGroup) {
-        cageScene.cageGroup.scale.x = mode.name === 'full' ? 1 : 0.85;
+        cageScene.cageGroup.scale.x = cageScaleX;
     }
 
-    const cageWidth = (mode.x[1] - mode.x[0]) * 20;
-    hamsterWalkBounds = {
-        min: -(cageWidth / 2) * 0.9,
-        max: (cageWidth / 2) * 0.9,
-    };
+    // 케이지 실제 world X 범위 계산 (너비 18 * scale * 0.9 여유)
+    const cageHalfW = 9 * cageScaleX * 0.9;
+    const boundsMin = -cageHalfW;
+    const boundsMax = cageHalfW;
+
+    // content.js walkBounds 업데이트 + storage에 저장 (다음 탭에서도 유지)
+    if (typeof walkBounds !== 'undefined') {
+        walkBounds.min = boundsMin;
+        walkBounds.max = boundsMax;
+    }
+    chrome.storage.local.set({ necksterWalkBounds: { min: boundsMin, max: boundsMax } });
 
     // 햄스터를 케이지 중앙으로 이동
     if (typeof moveHamsterX === 'function' && typeof model !== 'undefined' && model) {
         const delta = mode.name === 'left' ? -3 : mode.name === 'right' ? 3 : 0;
-        moveHamsterX(-model.position.x + delta); // 현재 위치 → 중앙(±delta)
+        moveHamsterX(-model.position.x + delta);
     }
 }
 
