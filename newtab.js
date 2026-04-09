@@ -295,12 +295,17 @@ function initCageScene() {
     fillLight.position.set(-5, 4, 8);
     cageScene.add(fillLight);
 
+    // 케이지 그룹 (너비 scale 조절용)
+    const cageGroup = new THREE.Group();
+    cageScene.add(cageGroup);
+    cageScene.cageGroup = cageGroup;
+
     // === 베이지 톱밥 바닥 (케이지 안) ===
     const floorGeo = new THREE.BoxGeometry(18, 1.5, 10);
     const floorMat = new THREE.MeshLambertMaterial({ color: 0xc4b060 }); // 연노란색
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.position.set(0, -4.5, 0);
-    cageScene.add(floor);
+    cageGroup.add(floor);
 
     // === 반투명 유리 케이지 벽 (흰색) ===
     const acrylicMat = new THREE.MeshPhongMaterial({
@@ -315,27 +320,27 @@ function initCageScene() {
     const backWallGeo = new THREE.PlaneGeometry(18, 8);
     const backWall = new THREE.Mesh(backWallGeo, acrylicMat);
     backWall.position.set(0, -0.5, -5);
-    cageScene.add(backWall);
+    cageGroup.add(backWall);
 
     // 좌측벽
     const sideWallGeo = new THREE.PlaneGeometry(10, 8);
     const leftWall = new THREE.Mesh(sideWallGeo, acrylicMat);
     leftWall.rotation.y = Math.PI / 2;
     leftWall.position.set(-9, -0.5, 0);
-    cageScene.add(leftWall);
+    cageGroup.add(leftWall);
 
     // 우측벽
     const rightWall = new THREE.Mesh(sideWallGeo, acrylicMat);
     rightWall.rotation.y = -Math.PI / 2;
     rightWall.position.set(9, -0.5, 0);
-    cageScene.add(rightWall);
+    cageGroup.add(rightWall);
 
     // === 갈색 테두리 (케이지 프레임) ===
     const frameMat = new THREE.LineBasicMaterial({ color: 0xf5f0d0 });
     const frameGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(18, 8, 10));
     const frame = new THREE.LineSegments(frameGeo, frameMat);
     frame.position.set(0, -0.5, 0);
-    cageScene.add(frame);
+    cageGroup.add(frame);
 
     // Raycaster용 바닥면 참조
     cageScene.floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 4.5);
@@ -391,6 +396,11 @@ function updateCageLayout() {
     cageCamera.aspect = width / height;
     cageCamera.updateProjectionMatrix();
     cageRenderer.setSize(width, height);
+
+    // 절반 모드에서 케이지 너비를 줄여서 캔버스에 맞춤
+    if (cageScene.cageGroup) {
+        cageScene.cageGroup.scale.x = mode.name === 'full' ? 1 : 0.85;
+    }
 
     const cageWidth = (mode.x[1] - mode.x[0]) * 20;
     hamsterWalkBounds = {
