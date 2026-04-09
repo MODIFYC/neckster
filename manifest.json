@@ -27,6 +27,7 @@
         {
             "resources": [
                 "assets/hamster.glb",
+                "assets/wheel.glb",
                 "libs/*"
             ],
             "matches": [

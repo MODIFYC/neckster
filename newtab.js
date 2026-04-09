@@ -343,7 +343,8 @@ function initCageScene() {
     cageGroup.add(frame);
 
     // Raycaster용 바닥면 참조
-    cageScene.floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 4.5);
+    // 바닥 박스: center y=-4.5, height=1.5 → 표면 y=-3.75 → constant=3.75
+    cageScene.floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 3.75);
 }
 
 // ===== 햄스터 모델 로드 =====
@@ -422,6 +423,22 @@ function updateCageLayout() {
     }
 }
 
+// ===== 쳇바퀴 메시 생성 (GLB 로드) =====
+function createWheelMesh() {
+    const wrapper = new THREE.Group();
+    const ntLoader = new THREE.GLTFLoader();
+    ntLoader.load(chrome.runtime.getURL('assets/wheel.glb'), (gltf) => {
+        const wheel = gltf.scene;
+        // 크기 및 위치 조정 (로드 후 실제 bounding box 기준)
+        wheel.scale.set(1, 1, 1);
+        // 바닥에 붙이기 위해 bounding box 계산
+        const box = new THREE.Box3().setFromObject(wheel);
+        wheel.position.y = -box.min.y;
+        wrapper.add(wheel);
+    });
+    return wrapper;
+}
+
 // ===== 아이템 배치 시작 =====
 function startPlacing(itemType) {
     if (placingItem) return;
@@ -430,10 +447,7 @@ function startPlacing(itemType) {
     const scale = 0.5;
 
     if (itemType === 'wheel') {
-        const torusGeometry = new THREE.TorusGeometry(1, 0.3, 8, 20);
-        const material = new THREE.MeshLambertMaterial({ color: 0xA0522D });
-        mesh = new THREE.Mesh(torusGeometry, material);
-        mesh.scale.set(scale, scale, scale);
+        mesh = createWheelMesh();
     } else if (itemType === 'bowl') {
         const cylinderGeometry = new THREE.CylinderGeometry(1, 1, 0.4, 16);
         const material = new THREE.MeshLambertMaterial({ color: 0xDEB887 });
@@ -447,7 +461,7 @@ function startPlacing(itemType) {
     }
 
     mesh.userData = { type: itemType, placed: false };
-    cageScene.add(mesh);
+    cageScene.cageGroup.add(mesh);
 
     placingItem = {
         type: itemType,
@@ -475,7 +489,19 @@ function onCanvasMouseMove(event) {
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(cageScene.floorPlane, intersectPoint);
 
-    placingItem.mesh.position.copy(intersectPoint);
+    // cageGroup scale.x 역변환
+    if (cageScene.cageGroup) {
+        intersectPoint.x /= cageScene.cageGroup.scale.x;
+    }
+
+    // X/Z만 마우스 따라가게, Y는 아이템 종류별 바닥 위 고정값
+    const floorY = -3.75;
+    const yOffset = { wheel: 0, bowl: 0.1, water: 0.4 };
+    placingItem.mesh.position.set(
+        intersectPoint.x,
+        floorY + (yOffset[placingItem.type] || 0),
+        intersectPoint.z
+    );
     placingItem.initialized = true;
 }
 
