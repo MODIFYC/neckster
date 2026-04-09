@@ -391,3 +391,10 @@ function animate() {
     renderer.render(scene, camera);
 }
 animate();
+
+// newtab.js에서 호출: 햄스터를 현재 X 기준으로 delta만큼 이동
+function moveHamsterX(delta) {
+    if (!model) return;
+    model.position.x += delta;
+    baseModelX = model.position.x;
+}

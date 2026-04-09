@@ -397,6 +397,12 @@ function updateCageLayout() {
         min: -(cageWidth / 2) * 0.9,
         max: (cageWidth / 2) * 0.9,
     };
+
+    // 햄스터를 케이지 중앙으로 이동
+    if (typeof moveHamsterX === 'function' && typeof model !== 'undefined' && model) {
+        const delta = mode.name === 'left' ? -3 : mode.name === 'right' ? 3 : 0;
+        moveHamsterX(-model.position.x + delta); // 현재 위치 → 중앙(±delta)
+    }
 }
 
 // ===== 아이템 배치 시작 =====
@@ -569,3 +575,12 @@ function ntAnimate() {
 // ===== 시작 =====
 init();
 updateCageLayout();
+
+// content.js 햄스터 Y축 조정 (newtab 전용)
+(function waitForModel() {
+    if (typeof model !== 'undefined' && model) {
+        model.position.y += 1.5;
+    } else {
+        setTimeout(waitForModel, 100);
+    }
+})();
