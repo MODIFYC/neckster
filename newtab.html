@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neckster Newtab</title>
+    <link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+    <!-- 배경 씬 (전체 화면, 초원+하늘+구름+무지개) -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- 케이지 씬 (케이지+햄스터) -->
+    <canvas id="cage-canvas"></canvas>
+
+    <!-- 상단 버튼 -->
+    <div id="top-buttons">
+        <button id="btn-house" class="round-btn" title="집 버튼 - 케이지 크기 변경">🏠</button>
+        <button id="btn-hamster" class="round-btn" title="햄스터 크기">🐹</button>
+        <div id="decor-container">
+            <button id="btn-decor" class="round-btn" title="꾸미기">🖼️</button>
+            <div id="decor-sub">
+                <button id="btn-wheel" class="round-btn-sub" title="쳇바퀴">🎡</button>
+                <button id="btn-bowl" class="round-btn-sub" title="밥그릇">🍚</button>
+                <button id="btn-water" class="round-btn-sub" title="물통">💧</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 햄스터 크기 슬라이더 -->
+    <div id="hamster-scale-slider" class="hidden">
+        <label for="scale-input">크기:</label>
+        <input type="range" id="scale-input" min="0.3" max="2" step="0.1" value="1">
+        <span id="scale-value">1.0</span>
+    </div>
+
+    <!-- 카메라 버튼 (우측 하단) -->
+    <button id="btn-camera" class="round-btn" title="스크린샷">📷</button>
+
+    <!-- 라이브러리 로드 (script 순서 중요!) -->
+    <script src="libs/three.min.js"></script>
+    <script src="libs/GLTFLoader.js"></script>
+    <script src="content.js"></script>
+    <script src="newtab.js"></script>
+</body>
+</html>

@@ -262,6 +262,14 @@ loader.load(chrome.runtime.getURL('assets/hamster.glb'), (gltf) => {
 // 애니메이션 루프 수정
 let elapsedSeconds = 0;
 let lastTime = performance.now();
+let lastStorageSave = 0;
+
+// storage에서 이전 elapsedSeconds 불러오기
+chrome.storage.local.get('necksterElapsed', (data) => {
+    if (data.necksterElapsed) {
+        elapsedSeconds = data.necksterElapsed;
+    }
+});
 
 function animate() {
     requestAnimationFrame(animate);
@@ -270,6 +278,12 @@ function animate() {
     const now = performance.now();
     elapsedSeconds += (now - lastTime) / 1000; // 초 단위로 변환
     lastTime = now;
+
+    // 5초마다 storage에 저장
+    if (now - lastStorageSave > 5000) {
+        lastStorageSave = now;
+        chrome.storage.local.set({ necksterElapsed: elapsedSeconds });
+    }
 
     // 목 늘이기 (30s마다 0.1씩 늘어남, 캔버스 높이 80% 제한)
     if (headBone && baseHeadY !== null && baseHeadRotationX !== null) {
