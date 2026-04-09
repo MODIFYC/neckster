@@ -262,6 +262,17 @@ loader.load(chrome.runtime.getURL('assets/hamster.glb'), (gltf) => {
 // 애니메이션 루프 수정
 let elapsedSeconds = 0;
 let lastTime = performance.now();
+let lastStorageSave = 0;
+
+// storage에서 이전 상태 불러오기
+chrome.storage.local.get(['necksterElapsed', 'necksterWalkBounds'], (data) => {
+    if (data.necksterElapsed) {
+        elapsedSeconds = data.necksterElapsed;
+    }
+    if (data.necksterWalkBounds) {
+        walkBounds = data.necksterWalkBounds;
+    }
+});
 
 function animate() {
     requestAnimationFrame(animate);
@@ -270,6 +281,12 @@ function animate() {
     const now = performance.now();
     elapsedSeconds += (now - lastTime) / 1000; // 초 단위로 변환
     lastTime = now;
+
+    // 5초마다 storage에 저장
+    if (now - lastStorageSave > 5000) {
+        lastStorageSave = now;
+        chrome.storage.local.set({ necksterElapsed: elapsedSeconds });
+    }
 
     // 목 늘이기 (30s마다 0.1씩 늘어남, 캔버스 높이 80% 제한)
     if (headBone && baseHeadY !== null && baseHeadRotationX !== null) {
@@ -314,29 +331,26 @@ function animate() {
 
     // 이동 및 걷기 애니메이션
     if (model && baseModelX !== null) {
-        // 동적 경계 계산
-        const dynamicBounds = { min: -window.innerWidth / 30, max: window.innerWidth / 30 };
-
         if (isWalking) {
             // 이동 중
             const newX = model.position.x + walkSpeed * walkDirection;
 
             // 경계 체크
-            if (newX <= dynamicBounds.min) {
-                model.position.x = dynamicBounds.min;
+            if (newX <= walkBounds.min) {
+                model.position.x = walkBounds.min;
                 walkDirection = 1; // 오른쪽으로 방향 전환
-            } else if (newX >= dynamicBounds.max) {
-                model.position.x = dynamicBounds.max;
+            } else if (newX >= walkBounds.max) {
+                model.position.x = walkBounds.max;
                 walkDirection = -1; // 왼쪽으로 방향 전환
             } else {
                 model.position.x = newX;
             }
         } else {
-            // 정지 상태에서도 경계 체크 (창이 줄어들 때)
-            if (model.position.x < dynamicBounds.min) {
-                model.position.x = dynamicBounds.min;
-            } else if (model.position.x > dynamicBounds.max) {
-                model.position.x = dynamicBounds.max;
+            // 정지 상태에서도 경계 체크
+            if (model.position.x < walkBounds.min) {
+                model.position.x = walkBounds.min;
+            } else if (model.position.x > walkBounds.max) {
+                model.position.x = walkBounds.max;
             }
         }
 
@@ -377,3 +391,10 @@ function animate() {
     renderer.render(scene, camera);
 }
 animate();
+
+// newtab.js에서 호출: 햄스터를 현재 X 기준으로 delta만큼 이동
+function moveHamsterX(delta) {
+    if (!model) return;
+    model.position.x += delta;
+    baseModelX = model.position.x;
+}

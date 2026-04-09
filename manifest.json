@@ -3,6 +3,9 @@
     "name": "Neckster",
     "version": "1.0",
     "description": "거북목이 될수록 목이 늘어나는 햄스터",
+    "chrome_url_overrides": {
+        "newtab": "newtab.html"
+    },
     "content_scripts": [
         {
             "matches": [
@@ -24,6 +27,7 @@
         {
             "resources": [
                 "assets/hamster.glb",
+                "assets/wheel.glb",
                 "libs/*"
             ],
             "matches": [

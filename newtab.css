@@ -1,0 +1,211 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Canvas 스타일 */
+canvas {
+    display: block;
+    position: fixed;
+    left: 0;
+}
+
+#bg-canvas {
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#cage-canvas {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60%;
+    z-index: 2;
+}
+
+/* 상단 버튼 */
+#top-buttons {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+    z-index: 10;
+    align-items: flex-start;
+}
+
+#decor-container {
+    position: relative;
+}
+
+/* 동숲 스타일 원형 버튼 - 이미지 참조 색상 */
+.round-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #f5f0d0;
+    border: 4px solid #b8d74f;
+    box-shadow: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    outline: none;
+}
+
+.round-btn:hover {
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+.round-btn:active {
+    transform: scale(0.92);
+}
+
+/* 서브 버튼 (꾸미기 아래 나타나는 버튼) */
+.round-btn-sub {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fdf6e3;
+    border: 3px solid #c4b060;
+    box-shadow: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    outline: none;
+}
+
+.round-btn-sub:hover {
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+.round-btn-sub:active {
+    transform: scale(0.92);
+}
+
+/* 꾸미기 서브 메뉴 */
+#decor-sub {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    padding: 0;
+    gap: 8px;
+    pointer-events: none;
+}
+
+#decor-sub button {
+    pointer-events: auto;
+}
+
+#decor-container:hover #decor-sub,
+#decor-sub:hover {
+    max-height: 200px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 햄스터 크기 슬라이더 */
+#hamster-scale-slider {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 250, 226, 0.85);
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #c4b060;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+    font-size: 14px;
+    color: #9e854e;
+}
+
+#hamster-scale-slider.hidden {
+    display: none;
+}
+
+#scale-input {
+    width: 120px;
+}
+
+#scale-value {
+    min-width: 30px;
+    text-align: right;
+}
+
+/* 카메라 버튼 */
+#btn-camera {
+    position: fixed;
+    bottom: 30px;
+    right: 20px;
+    z-index: 10;
+}
+
+/* 반응형 조정 */
+@media (max-width: 768px) {
+    .round-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+        border-width: 3px;
+    }
+
+    .round-btn-sub {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    #top-buttons {
+        gap: 12px;
+    }
+
+    #hamster-scale-slider {
+        top: auto;
+        bottom: 80px;
+        right: 10px;
+        left: auto;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    #scale-input {
+        width: 80px;
+    }
+}
