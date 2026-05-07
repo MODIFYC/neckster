@@ -19,6 +19,29 @@ style.textContent = `
     animation: heartFloat 1.2s ease-out forwards;
     z-index: 1000000;
   }
+
+  #neckster-size-popup {
+    position: fixed;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    z-index: 1000001;
+    font-family: sans-serif;
+    font-size: 12px;
+    color: #555;
+    user-select: none;
+  }
+
+  #neckster-size-popup input[type=range] {
+    width: 120px;
+    cursor: pointer;
+  }
 `;
 document.head.appendChild(style);
 
@@ -40,6 +63,31 @@ canvas.style.cssText = `
 
 document.body.appendChild(canvas);
 
+// 크기 조절 팝업
+const sizePopup = document.createElement('div');
+sizePopup.id = 'neckster-size-popup';
+sizePopup.innerHTML = `
+  <span>🐹 크기</span>
+  <input type="range" id="neckster-scale-input" min="0.3" max="2.0" step="0.1" value="0.6">
+  <span id="neckster-scale-value">0.6</span>
+`;
+document.body.appendChild(sizePopup);
+
+document.getElementById('neckster-scale-input').addEventListener('input', (e) => {
+    const scale = parseFloat(e.target.value);
+    document.getElementById('neckster-scale-value').textContent = scale.toFixed(1);
+    if (model) {
+        baseModelScale = scale;
+        model.scale.set(scale, scale, scale);
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (!sizePopup.contains(e.target)) {
+        sizePopup.style.display = 'none';
+    }
+});
+
 // Three.js 기본 세팅
 const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
 renderer.setSize(canvasWidth, canvasHeight);
@@ -51,9 +99,36 @@ camera.lookAt(0, 1, 0);
 
 // 화면 크기 기반 경계 계산
 let walkBounds = { min: -window.innerWidth / 30, max: window.innerWidth / 30 };
+let screenBounds = { min: -10, max: 10 };
 
 // GLB 로드용 변수 초기화
 let model = null;
+
+// 카메라 기준 화면 전체 x 범위를 월드 좌표로 계산
+function updateScreenBounds() {
+    const tempRay = new THREE.Raycaster();
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const pt = new THREE.Vector3();
+    tempRay.setFromCamera(new THREE.Vector2(-1, 0), camera);
+    tempRay.ray.intersectPlane(plane, pt);
+    const left = pt.x;
+    tempRay.setFromCamera(new THREE.Vector2(1, 0), camera);
+    tempRay.ray.intersectPlane(plane, pt);
+    screenBounds = { min: left, max: pt.x };
+}
+
+// 드롭 위치 x 기준으로 3구역(왼/중/오) walkBounds 반환
+function getZoneBounds(x) {
+    const w = screenBounds.max - screenBounds.min;
+    const third = w / 3;
+    if (x < screenBounds.min + third) {
+        return { min: screenBounds.min, max: screenBounds.min + third };
+    } else if (x < screenBounds.min + 2 * third) {
+        return { min: screenBounds.min + third, max: screenBounds.min + 2 * third };
+    } else {
+        return { min: screenBounds.min + 2 * third, max: screenBounds.max };
+    }
+}
 
 // 캔버스 리사이징 함수
 function resizeCanvas() {
@@ -67,6 +142,7 @@ function resizeCanvas() {
 
     // 걷기 범위도 동적으로 업데이트
     walkBounds = { min: -w / 30, max: w / 30 };
+    updateScreenBounds();
 }
 
 // 처음 실행
@@ -156,8 +232,91 @@ function createHearts() {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// 드래그 상태
+let isDraggingHamster = false;
+let dragMoved = false;
+const hamsterDragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+
+function handleMouseDown(event) {
+    if (!model) return;
+    const rect = canvas.getBoundingClientRect();
+    const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const ny = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+    raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
+    const intersects = raycaster.intersectObject(model, true);
+    if (intersects.length > 0) {
+        isDraggingHamster = true;
+        dragMoved = false;
+        isWalking = false;
+        walkDirection = 0;
+    }
+}
+
+function handleMouseMove(event) {
+    if (!model) return;
+    const rect = canvas.getBoundingClientRect();
+    const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+
+    if (isDraggingHamster) {
+        dragMoved = true;
+        const dragRaycaster = new THREE.Raycaster();
+        dragRaycaster.setFromCamera(new THREE.Vector2(nx, 0), camera);
+        const target = new THREE.Vector3();
+        dragRaycaster.ray.intersectPlane(hamsterDragPlane, target);
+        if (target) {
+            const newX = Math.max(screenBounds.min, Math.min(screenBounds.max, target.x));
+            model.position.x = newX;
+            baseModelX = newX;
+        }
+        document.body.style.cursor = 'grabbing';
+        return;
+    }
+
+    // hover 감지 → 커서 변경
+    const ny = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+    raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
+    const hits = raycaster.intersectObject(model, true);
+    document.body.style.cursor = hits.length > 0 ? 'grab' : '';
+}
+
+function handleMouseUp() {
+    if (isDraggingHamster && dragMoved && model) {
+        walkBounds = getZoneBounds(model.position.x);
+        chrome.storage.local.set({ necksterWalkBounds: walkBounds });
+    }
+    isDraggingHamster = false;
+    document.body.style.cursor = '';
+}
+
+document.addEventListener('mousedown', handleMouseDown);
+document.addEventListener('mousemove', handleMouseMove);
+document.addEventListener('mouseup', handleMouseUp);
+
+document.addEventListener('contextmenu', (e) => {
+    if (!model) return;
+    const rect = canvas.getBoundingClientRect();
+    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const ny = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+    raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
+    const intersects = raycaster.intersectObject(model, true);
+    if (intersects.length === 0) return;
+
+    e.preventDefault();
+    const currentScale = baseModelScale || 0.6;
+    const input = document.getElementById('neckster-scale-input');
+    const label = document.getElementById('neckster-scale-value');
+    input.value = currentScale;
+    label.textContent = currentScale.toFixed(1);
+
+    sizePopup.style.display = 'flex';
+    sizePopup.style.left = e.clientX + 'px';
+    sizePopup.style.top = (e.clientY - 80) + 'px';
+});
+
 // 클릭 시 애니메이션 처리
 function handleCanvasClick(event) {
+    if (dragMoved) { dragMoved = false; return; }
+
     // 마우스 좌표를 정규화된 좌표로 변환 (-1 ~ 1)
     const rect = canvas.getBoundingClientRect();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;

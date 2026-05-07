@@ -15,6 +15,10 @@ let currentCageMode = 0;
 let placingItem = null;
 let itemsInScene = [];
 
+// 아이템 드래그 상태
+let draggingItem = null;
+let wasDragging = false;
+
 // ===== 초기화 =====
 function init() {
     initBgScene();
