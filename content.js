@@ -63,6 +63,18 @@ canvas.style.cssText = `
 
 document.body.appendChild(canvas);
 
+// 드래그 중 페이지 인터랙션 차단용 오버레이
+const dragBlocker = document.createElement('div');
+dragBlocker.style.cssText = `
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 999998;
+  cursor: grabbing;
+  display: none;
+`;
+document.body.appendChild(dragBlocker);
+
 // 크기 조절 팝업
 const sizePopup = document.createElement('div');
 sizePopup.id = 'neckster-size-popup';
@@ -249,6 +261,8 @@ function handleMouseDown(event) {
         dragMoved = false;
         isWalking = false;
         walkDirection = 0;
+        dragBlocker.style.display = 'block';
+        event.preventDefault();
     }
 }
 
@@ -285,6 +299,7 @@ function handleMouseUp() {
         chrome.storage.local.set({ necksterWalkBounds: walkBounds });
     }
     isDraggingHamster = false;
+    dragBlocker.style.display = 'none';
     document.body.style.cursor = '';
 }
 

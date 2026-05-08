@@ -6,11 +6,17 @@
     "chrome_url_overrides": {
         "newtab": "newtab.html"
     },
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icons/icon16.png",
+            "48": "icons/icon48.png",
+            "128": "icons/icon128.png"
+        }
+    },
     "content_scripts": [
         {
-            "matches": [
-                "<all_urls>"
-            ],
+            "matches": ["<all_urls>"],
             "js": [
                 "libs/three.min.js",
                 "libs/GLTFLoader.js",
@@ -20,8 +26,10 @@
         }
     ],
     "permissions": [
-        "alarms",
         "storage"
+    ],
+    "optional_host_permissions": [
+        "<all_urls>"
     ],
     "web_accessible_resources": [
         {
@@ -30,9 +38,7 @@
                 "assets/wheel.glb",
                 "libs/*"
             ],
-            "matches": [
-                "<all_urls>"
-            ]
+            "matches": ["<all_urls>"]
         }
     ],
     "icons": {
